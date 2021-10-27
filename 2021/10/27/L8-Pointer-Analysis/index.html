@@ -20,20 +20,23 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="当哈利在恍然中大悟，理清思路时，他瞬间意识到伏地魔也知道了。这是多么神奇的一种感应，我相信这与他们之间的联系无关，只是一种存在于顶尖头脑之间的感应。 邓布利多说要打败他，就要先了解他，于是追寻他的记忆，去过他去的地方，当然还有赫敏找到了当年他读过的书，那本让他学会如何制造魂器的书。当哈利让那些记忆也成为自己记忆的一部分，当他去了伏地魔曾待过的地方，当他读着那本书，很多东西都在慢慢明晰。面对这些，">
+  <meta name="description" content="MotivationCHA产生的假阳性结果使得分析结果并不准确，指针分析可提高精度。 Introduction to Pointer Analysis 作为基本的静态分析  计算指针所指向的内存地址   对面向对象程序而言  计算指针所指向的对象   作为$may\ analysis$  计算过近似后一个指针可能指向对象的集合">
 <meta property="og:type" content="article">
-<meta property="og:title" content="跨越时空的对话">
-<meta property="og:url" content="http://example.com/2021/10/26/%E8%B7%A8%E8%B6%8A%E6%97%B6%E7%A9%BA%E7%9A%84%E5%AF%B9%E8%AF%9D/index.html">
+<meta property="og:title" content="L8 Pointer Analysis">
+<meta property="og:url" content="http://example.com/2021/10/27/L8-Pointer-Analysis/index.html">
 <meta property="og:site_name" content="tianyu-monica&#39;s space">
-<meta property="og:description" content="当哈利在恍然中大悟，理清思路时，他瞬间意识到伏地魔也知道了。这是多么神奇的一种感应，我相信这与他们之间的联系无关，只是一种存在于顶尖头脑之间的感应。 邓布利多说要打败他，就要先了解他，于是追寻他的记忆，去过他去的地方，当然还有赫敏找到了当年他读过的书，那本让他学会如何制造魂器的书。当哈利让那些记忆也成为自己记忆的一部分，当他去了伏地魔曾待过的地方，当他读着那本书，很多东西都在慢慢明晰。面对这些，">
+<meta property="og:description" content="MotivationCHA产生的假阳性结果使得分析结果并不准确，指针分析可提高精度。 Introduction to Pointer Analysis 作为基本的静态分析  计算指针所指向的内存地址   对面向对象程序而言  计算指针所指向的对象   作为$may\ analysis$  计算过近似后一个指针可能指向对象的集合">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2021-10-26T03:05:41.000Z">
-<meta property="article:modified_time" content="2021-10-26T09:24:33.825Z">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/imgkey_factor_in_PTA.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/imgheap_abstraction.png?raw=true">
+<meta property="article:published_time" content="2021-10-27T12:15:39.000Z">
+<meta property="article:modified_time" content="2021-10-27T12:20:54.643Z">
 <meta property="article:author" content="Tkuang">
-<meta property="article:tag" content="Essay">
+<meta property="article:tag" content="course">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/tianyu-monica/imag/blob/main/imgkey_factor_in_PTA.png?raw=true">
 
-<link rel="canonical" href="http://example.com/2021/10/26/%E8%B7%A8%E8%B6%8A%E6%97%B6%E7%A9%BA%E7%9A%84%E5%AF%B9%E8%AF%9D/">
+<link rel="canonical" href="http://example.com/2021/10/27/L8-Pointer-Analysis/">
 
 
 <script id="page-configurations">
@@ -46,7 +49,7 @@
   };
 </script>
 
-  <title>跨越时空的对话 | tianyu-monica's space</title>
+  <title>L8 Pointer Analysis | tianyu-monica's space</title>
   
 
 
@@ -160,7 +163,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/10/26/%E8%B7%A8%E8%B6%8A%E6%97%B6%E7%A9%BA%E7%9A%84%E5%AF%B9%E8%AF%9D/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/10/27/L8-Pointer-Analysis/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -173,7 +176,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          跨越时空的对话
+          L8 Pointer Analysis
         </h1>
 
         <div class="post-meta">
@@ -184,7 +187,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2021-10-26 11:05:41 / Modified: 17:24:33" itemprop="dateCreated datePublished" datetime="2021-10-26T11:05:41+08:00">2021-10-26</time>
+              <time title="Created: 2021-10-27 20:15:39 / Modified: 20:20:54" itemprop="dateCreated datePublished" datetime="2021-10-27T20:15:39+08:00">2021-10-27</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -192,7 +195,7 @@
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%9A%8F%E7%AC%94/" itemprop="url" rel="index"><span itemprop="name">随笔</span></a>
+                  <a href="/categories/Static-Analysis/" itemprop="url" rel="index"><span itemprop="name">Static Analysis</span></a>
                 </span>
             </span>
 
@@ -214,20 +217,102 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <ul>
-<li>当哈利在恍然中大悟，理清思路时，他瞬间意识到伏地魔也知道了。这是多么神奇的一种感应，我相信这与他们之间的联系无关，只是一种存在于顶尖头脑之间的感应。</li>
-<li>邓布利多说要打败他，就要先了解他，于是追寻他的记忆，去过他去的地方，当然还有赫敏找到了当年他读过的书，那本让他学会如何制造魂器的书。当哈利让那些记忆也成为自己记忆的一部分，当他去了伏地魔曾待过的地方，当他读着那本书，很多东西都在慢慢明晰。面对这些，他心有感触，同时，又察觉到，许多年前另一个男孩在某个时刻正经历着他所经历的一切，这使他忍不住去想是否他当时也想到了一些，一些他现在拥有的奇特感受与想法。<span id="more"></span></li>
-<li>而当少年汤姆在搜寻这些古老的秘密时，是否亦有过心灵的震颤，那些在他之前探寻过这些秘密的人，或者，那些制造了这些秘密的人，他们的想法，他们的生平是否让他好奇向往。邓布利多，格林德沃……都是如此。因为异于常人，因为天赋过人，他们都努力搜寻着与神秘力量有关的一切，他们都坚信自己不凡，都想证明自己的力量。</li>
-<li>但邓布利多和格林德沃，哈利和汤姆各自走上了截然相反的道路，也许不是巧合，是一种必然。</li>
-<li>毕竟，只有黑魔头才让救世主有意义。同时，这两个身份又都能与强大匹配，足以流传万世，只是一个遭人唾骂，一个受人敬仰。</li>
-<li>如果格林德沃没有成为黑魔头，邓布利多会怎样，继续成为一个优秀但不够独特的平凡巫师？毕竟他所获得的奖项都不是绝无仅有，而历代获得者也都将经历慢慢被人遗忘直至平淡到好像从未存在。他会不会厌倦，会不会寻找更强大的法力，会不会寻求能证明自己的方法，会不会在这条路上走得太远以致过了头？一如格林德沃和里德尔。毫无疑问，在天赋与才能甚至努力上，这两者毫不逊色。但是，我们无从得知。因为格林德沃的黑暗势力让他有了另一个机会，一个更好更完美的机会。证明自己的强大，同时不必背负任何骂名，而是以救世主的身份展示他的强大。</li>
-<li>换个角度，如果汤姆年少时，格林德沃仍四处扩张他的黑暗势力，他会选择加入还是成为打败格林德沃的救世主？以书中呈现出的伏地魔的性格，他似乎很难屈从于某人，似乎不甘成为他人争霸的工具，他想要独特，想要强大，想要自己战无不胜。我想他大概真的会走上一条如同哈利现在走过的路，不同的是，他是完全主动的，内心充满了巨大欲望和动机，他的知识获取能力，在对手面前伪装自己的能力都超于常人。</li>
-<li>或许，对于汤姆这样天赋异禀又极具野心的少年来说，他之所以会成为伏地魔，正是因为在他的少年时代缺少这样一个伏地魔。</li>
-<li>当我阅读某些文字时，确乎感受到一股颤栗，有时源自与作者的灵魂共鸣，仿佛自己与数百数千年前的那个小男孩小女孩坐在一起，有时源自同我一起读过这本书的朋友，看着那些对于我们有着特殊意义的文字或是藏着我们某段回忆的文字，我忍不住去想，他是否也在此处停下，慢慢回忆那些过往？他是否也联想到了什么？</li>
-<li>有时候走在路上，看到某种野花，发现它可能是千百年前就已存在，并在某位诗人等待故人的路边盛开过，一刹那，感到自己仿佛参与了某个秘密，而那束野花就是见证者。</li>
-<li>有时猛然抬头看天，看湖，看草木，某些绚丽异象让我不由得想起一些词句，并感到蔓延全身的颤栗，那些字句如此奇诡，又惊人的贴切。让我坚信，我确乎看到了当年诗人看到的景象！</li>
-<li>近来在看一位不相识的学长的代码，初看毫无头绪，但渐渐我开始明白他的思路，他遇到的困难，在一些不起眼甚至有些令人费解的地方，我琢磨出些许他当时思考的经过。一个人的代码风格就是他本人在诉说。</li>
-<li>相隔千年或者相距千里，有的素不相识，有的共享回忆，但在某一刻，某一个我们明明全无联系的时刻，仿佛有一根绳子把我们完全联系在一起，整个身心到灵魂与思想，他人看不出，但我们彼此知道，或者，我知道。此足矣。</li>
+        <h5 id="Motivation"><a href="#Motivation" class="headerlink" title="Motivation"></a>Motivation</h5><p>CHA产生的假阳性结果使得分析结果并不准确，指针分析可提高精度。</p>
+<h5 id="Introduction-to-Pointer-Analysis"><a href="#Introduction-to-Pointer-Analysis" class="headerlink" title="Introduction to Pointer Analysis"></a>Introduction to Pointer Analysis</h5><ul>
+<li><p>作为基本的静态分析</p>
+<ul>
+<li>计算指针所指向的内存地址</li>
+</ul>
+</li>
+<li><p>对面向对象程序而言</p>
+<ul>
+<li>计算指针所指向的对象</li>
+</ul>
+</li>
+<li><p>作为$may\ analysis$</p>
+<ul>
+<li>计算<strong>过近似</strong>后一个指针可能指向对象的集合<span id="more"></span></li>
+</ul>
+</li>
+</ul>
+<p>输入一个程序，经指针分析后，输出指向关系</p>
+<h6 id="指针分析与别名分析"><a href="#指针分析与别名分析" class="headerlink" title="指针分析与别名分析"></a>指针分析与别名分析</h6><p>两者紧密联系，但不完全相同</p>
+<ul>
+<li>Pointer analysis: which objects a pointer can point to?</li>
+<li>Alias analysis: can two pointers point to the same object?</li>
+</ul>
+<p>别名信息可由指向关系推导出：两变量指向相同，即互为别名。</p>
+<h5 id="Key-Factors-of-Pointer-Analysis"><a href="#Key-Factors-of-Pointer-Analysis" class="headerlink" title="Key Factors of Pointer Analysis"></a>Key Factors of Pointer Analysis</h5><p>指针分析是一个复杂的系统，许多因素影响着它的精度与效率。</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgkey_factor_in_PTA.png?raw=true" alt=""></p>
+<ul>
+<li><p>Heap abstraction</p>
+<p>由于循环和递归的存在，程序在动态执行时，堆中对象的个数可能无穷无尽。为确保可以终止，静态分析中的堆抽象将<strong>动态分配的</strong>、<strong>无限制的</strong>具体对象建模为<strong>有限的抽象</strong>对象。</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgheap_abstraction.png?raw=true" alt=""></p>
+<ul>
+<li><p>Allocation site abstraction</p>
+<ul>
+<li>model concrete objects by their allocation sites</li>
+<li>one abstract object per allocation site to represent all its allocated concrete objects</li>
+</ul>
+<p>由于程序中$allocation\ site$数目有限，因此，所得抽象对象必然有限。</p>
+</li>
+</ul>
+</li>
+<li><p>Context sensitivity</p>
+<ul>
+<li><p>Context-sensitive</p>
+<p>可以区分一个方法被调用时不同的上下文，并针对每一个不同的上下文进行分析</p>
+</li>
+<li><p>Context-insensitive</p>
+<p>将一个方法被调用时所处的不同上下文融合在一起，对一个方法只进行一次分析</p>
+</li>
+</ul>
+<p>上下文不敏感会使得分析丢失一些精度，但很多情况下已可以满足需求。</p>
+</li>
+<li><p>Flow sensitivity</p>
+<ul>
+<li><p>Flow-sensitive</p>
+<p>遵循程序执行时各语句的顺序，在每个程序点都维护相关指向信息</p>
+</li>
+<li><p>Flow-insensitive</p>
+<p>忽略控制流的顺序，将程序当作无序语句的集合，对整个程序维护一份指向关系</p>
+</li>
+</ul>
+</li>
+<li><p>Analysis scope</p>
+<ul>
+<li><p>Whole-program</p>
+<p>对程序中所有指针计算其指向信息，为所有可能用户提供信息</p>
+</li>
+<li><p>Demand-driven</p>
+<p>仅对指定部分内的指针计算其指向信息，为特定用户提供信息</p>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="Concerned-Statements"><a href="#Concerned-Statements" class="headerlink" title="Concerned Statements"></a>Concerned Statements</h5><h6 id="Pointers-in-Java"><a href="#Pointers-in-Java" class="headerlink" title="Pointers in Java"></a>Pointers in Java</h6><ul>
+<li>Local variable: x</li>
+<li>Static field: C.f</li>
+<li>Instance field: x.f<ul>
+<li>modeled as an object (pointed by x) with a field f</li>
+</ul>
+</li>
+<li>Array element: array[i]<ul>
+<li>ignore indexes. modeled as an object (pointed by array) with a single field, which may point to any value stored in array</li>
+</ul>
+</li>
+</ul>
+<h6 id="Pointer-Affecting-Statements"><a href="#Pointer-Affecting-Statements" class="headerlink" title="Pointer-Affecting Statements"></a>Pointer-Affecting Statements</h6><ul>
+<li>New <code>x=new T()</code></li>
+<li>Assign <code>x=y</code></li>
+<li>Store <code>x.f=y</code></li>
+<li>Load <code>y=x.f</code></li>
+<li>Call <code>r=x.k(a,……)</code><ul>
+<li>Static call</li>
+<li>Special call</li>
+<li>Virtual call</li>
+</ul>
+</li>
 </ul>
 
     </div>
@@ -238,7 +323,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/Essay/" rel="tag"># Essay</a>
+              <a href="/tags/course/" rel="tag"># course</a>
           </div>
 
         
@@ -247,13 +332,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2021/10/25/%E8%82%96%E7%94%B3%E5%85%8B%E7%9A%84%E6%95%91%E8%B5%8E/" rel="prev" title="肖申克的救赎">
-      <i class="fa fa-chevron-left"></i> 肖申克的救赎
+    <a href="/2021/10/27/L7-Interprocedural-Analysis/" rel="prev" title="L7 Interprocedural Analysis">
+      <i class="fa fa-chevron-left"></i> L7 Interprocedural Analysis
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2021/10/27/L1-Introduction/" rel="next" title="L1 Introduction">
-      L1 Introduction <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -312,6 +394,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#Motivation"><span class="nav-number">1.</span> <span class="nav-text">Motivation</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Introduction-to-Pointer-Analysis"><span class="nav-number">2.</span> <span class="nav-text">Introduction to Pointer Analysis</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%8C%87%E9%92%88%E5%88%86%E6%9E%90%E4%B8%8E%E5%88%AB%E5%90%8D%E5%88%86%E6%9E%90"><span class="nav-number">2.1.</span> <span class="nav-text">指针分析与别名分析</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Key-Factors-of-Pointer-Analysis"><span class="nav-number">3.</span> <span class="nav-text">Key Factors of Pointer Analysis</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Concerned-Statements"><span class="nav-number">4.</span> <span class="nav-text">Concerned Statements</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#Pointers-in-Java"><span class="nav-number">4.1.</span> <span class="nav-text">Pointers in Java</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#Pointer-Affecting-Statements"><span class="nav-number">4.2.</span> <span class="nav-text">Pointer-Affecting Statements</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -442,6 +525,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 
