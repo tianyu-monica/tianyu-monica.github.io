@@ -150,6 +150,526 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/10/27/L7-Interprocedural-Analysis/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tkuang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tianyu-monica's space">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/27/L7-Interprocedural-Analysis/" class="post-title-link" itemprop="url">L7 Interprocedural Analysis</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-10-27 16:28:01 / Modified: 16:58:35" itemprop="dateCreated datePublished" datetime="2021-10-27T16:28:01+08:00">2021-10-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Static-Analysis/" itemprop="url" rel="index"><span itemprop="name">Static Analysis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h5 id="Motivation"><a href="#Motivation" class="headerlink" title="Motivation"></a>Motivation</h5><p>使数据流信息在程序间控制流边上传播，可得到更好的精度。而不必对方法调用采取最保守的假设。</p>
+<h5 id="Call-Graph-Construction-CHA"><a href="#Call-Graph-Construction-CHA" class="headerlink" title="Call Graph Construction(CHA)"></a>Call Graph Construction(CHA)</h5><p>**调用图(Call Graph)**是程序中调用关系的表示，是一组从调用点指向目标方法的调用边的集合。</p>
+<p>针对面向对象语言的调用图构建：</p>
+<ul>
+<li>Class hierarchy analysis (CHA)</li>
+<li>Rapid type analysis (RTA)</li>
+<li>Variable type analysis (VTA)</li>
+<li>Pointer analysis (k-CFA)</li>
+</ul>
+<p>从上到下越来越准确，从下到上越来越高效。</p>
+<h6 id="java中的方法调用"><a href="#java中的方法调用" class="headerlink" title="java中的方法调用"></a>java中的方法调用</h6><p>静态调用：调用静态方法，只有一个目标方法，静态分析时可判断出调用对象</p>
+<p>特殊调用：调用构造函数、私有实例方法、父类实例方法，只有一个目标方法，静态分析时可判断出调用对象</p>
+<p>虚拟调用：其他实例方法的调用，为实现多态，其目标方法可能存在多个，运行时才能最终确定。（构建调用图的关键）</p>
+<h6 id="虚拟调用的方法调度"><a href="#虚拟调用的方法调度" class="headerlink" title="虚拟调用的方法调度"></a>虚拟调用的方法调度</h6><p>运行时，一个虚拟调用最终如何解析，取决于：</p>
+<ul>
+<li>方法接收对象的类型</li>
+<li>调用点处的<strong>方法签名</strong>（此处指：class type+method name+descriptor（return type+parameter types）用以标识一个方法）</li>
+</ul>
+<p>记对象类型为$c$，方法签名为$m$，定义调度函数$Dispatch(c,m)$，用以模拟运行时的方法调度过程。</p>
+<p>接收对象所属类中找不到对应的<strong>非抽象</strong>方法时，向父类寻找。</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgdispatch_function.png?raw=true"></p>
+<h6 id="Class-Hierarchy-Analysis"><a href="#Class-Hierarchy-Analysis" class="headerlink" title="Class Hierarchy Analysis"></a>Class Hierarchy Analysis</h6><p>需要知道整个程序的类继承信息。基于接收对象的<strong>声明类型</strong>（精度不高的原因）对虚拟调用进行解析。即，假设该对象可能指向此类型及此类型所有子类，通过搜寻它的类继承完成目标方法的解析。</p>
+<p>CHA中，定义解析函数$Resolve(cs)$，用以解析一个调用点处所有可能的目标方法。只有虚拟调用存在不确定性，需遍历整个继承树中的类。</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgresolve_function.png?raw=true"></p>
+<h6 id="Features-of-CHA"><a href="#Features-of-CHA" class="headerlink" title="Features of CHA"></a>Features of CHA</h6><ul>
+<li><p>fast</p>
+<ul>
+<li>只需考虑调用点处的接收对象的声明类型及其继承类</li>
+<li>忽略了数据流、控制流信息</li>
+</ul>
+</li>
+<li><p>imprecise</p>
+<ul>
+<li>易导致不正确的目标方法</li>
+</ul>
+</li>
+</ul>
+<p>普遍应用：IDE</p>
+<h6 id="Call-Graph-Construction"><a href="#Call-Graph-Construction" class="headerlink" title="Call Graph Construction"></a>Call Graph Construction</h6><p>通过CHA为整个程序构建调用图</p>
+<ul>
+<li>从Entry方法开始</li>
+<li>对每一个可达的方法$m$，通过CHA，对其中每一个调用点进行目标方法的解析</li>
+<li>重复，直到没有新的方法被发现</li>
+</ul>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgCHA%E8%B0%83%E7%94%A8%E5%9B%BE%E6%9E%84%E5%BB%BA%E7%AE%97%E6%B3%95.png?raw=true"></p>
+<h5 id="Interprocedural-Control-Flow-Graph"><a href="#Interprocedural-Control-Flow-Graph" class="headerlink" title="Interprocedural Control-Flow Graph"></a>Interprocedural Control-Flow Graph</h5><p>控制流图表示独立方法内部的结构，<strong>程序间控制流图 (ICFG)</strong> 可表示整个程序的结构，是程序间分析的基础。</p>
+<p>ICFG包含了每个方法的CFG，并增加了两种类型的边：</p>
+<ul>
+<li>调用边：从调用点指向调用目标的入口结点</li>
+<li>返回边：从调用目标的出口结点指向紧跟在调用点后的语句</li>
+</ul>
+<p>即：$ICFG=CFGs+call\ &amp;\ return\ edges$</p>
+<p>而调用图提供了连接这两种边的信息。</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgICFG_example.png?raw=true"></p>
+<ul>
+<li><p>call-to-return edges存在的意义？</p>
+<p>propagate local data-flow</p>
+</li>
+</ul>
+<h5 id="Interprocedural-Data-Flow-Analysis"><a href="#Interprocedural-Data-Flow-Analysis" class="headerlink" title="Interprocedural Data-Flow Analysis"></a>Interprocedural Data-Flow Analysis</h5><p>基于ICFG，可实现程序间数据流分析。就迁移函数而言，其相较于CFG的$node\ transfer$，增加了$edge\ transfer$。</p>
+<ul>
+<li>Call edge transfer: transfer data flow from call site to the entry node of callee</li>
+<li>Return edge transfer: transfer data flow from exit node of the callee to the return site</li>
+</ul>
+<h6 id="Interprocedural-Constant-Propagation"><a href="#Interprocedural-Constant-Propagation" class="headerlink" title="Interprocedural Constant Propagation"></a>Interprocedural Constant Propagation</h6><ul>
+<li><p>Call edge transfer: pass argument values</p>
+</li>
+<li><p>Return edge transfer: pass return values</p>
+</li>
+<li><p>Node transfer: same as intraprocedural constant propagation except that <u>for call nodes, the transfer function is identity function</u>. </p>
+</li>
+</ul>
+<p>结点迁移函数中，对于调用结点不作处理，而是将调用方法的返回值留给边迁移函数处理。但需在call-to-return边中，kill LHS 变量。</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgInterprocedural_constant_propagation.png?raw=true"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/10/27/L5-6-Data-Flow-Analysis-Foundations/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tkuang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tianyu-monica's space">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/27/L5-6-Data-Flow-Analysis-Foundations/" class="post-title-link" itemprop="url">L5-6 Data Flow Analysis (Foundations)</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-10-27 16:26:54 / Modified: 16:56:43" itemprop="dateCreated datePublished" datetime="2021-10-27T16:26:54+08:00">2021-10-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Static-Analysis/" itemprop="url" rel="index"><span itemprop="name">Static Analysis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h5 id="另一个视角下的迭代算法"><a href="#另一个视角下的迭代算法" class="headerlink" title="另一个视角下的迭代算法"></a>另一个视角下的迭代算法</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%8F%A6%E4%B8%80%E4%B8%AA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84%E8%BF%AD%E4%BB%A3%E7%AE%97%E6%B3%95.png?raw=true"></p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E8%BF%AD%E4%BB%A3%E8%87%B3%E4%B8%8D%E5%8A%A8%E7%82%B9.png?raw=true"></p>
+<p>当$X=F(X)$时，$X$即为函数$F$的不动点</p>
+<h5 id="偏序"><a href="#偏序" class="headerlink" title="偏序"></a>偏序</h5><p>poset: 偏序集</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%81%8F%E5%BA%8F%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<p>偏序意味着: P中的一对元素可以<strong>不可比</strong>，即: 不是任意对元素都满足偏序关系.</p>
+<h5 id="上界和下界"><a href="#上界和下界" class="headerlink" title="上界和下界"></a>上界和下界</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E4%B8%8A%E7%95%8C%E5%92%8C%E4%B8%8B%E7%95%8C%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<h6 id="最小上界和最大下界"><a href="#最小上界和最大下界" class="headerlink" title="最小上界和最大下界"></a>最小上界和最大下界</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%9C%80%E5%B0%8F%E4%B8%8A%E7%95%8C%E5%92%8C%E6%9C%80%E5%A4%A7%E4%B8%8B%E7%95%8C.png?raw=true"></p>
+<h6 id="两个元素间的最小上界和最大下界"><a href="#两个元素间的最小上界和最大下界" class="headerlink" title="两个元素间的最小上界和最大下界"></a>两个元素间的最小上界和最大下界</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E4%B8%A4%E5%85%83%E7%B4%A0%E6%9C%80%E5%B0%8F%E4%B8%8A%E7%95%8C%E5%92%8C%E6%9C%80%E5%A4%A7%E4%B8%8B%E7%95%8C.png?raw=true"></p>
+<p>并非所有偏序集都一定存在最小上界和最大下界，但若存在，则<strong>唯一</strong></p>
+<h5 id="格、半格、全格、乘积格"><a href="#格、半格、全格、乘积格" class="headerlink" title="格、半格、全格、乘积格"></a>格、半格、全格、乘积格</h5><h6 id="格"><a href="#格" class="headerlink" title="格"></a>格</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%A0%BC%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<h6 id="半格"><a href="#半格" class="headerlink" title="半格"></a>半格</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%8D%8A%E6%A0%BC.png?raw=true"></p>
+<h6 id="全格"><a href="#全格" class="headerlink" title="全格"></a>全格</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%85%A8%E6%A0%BC.png?raw=true"></p>
+<p>即: <strong>任意子集</strong>的最小上界和最大下界都存在</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%85%A8%E6%A0%BC%E6%80%A7%E8%B4%A8.png?raw=true"></p>
+<p>每个<strong>有界格</strong>(P有限)都是一个全格</p>
+<h6 id="乘积格"><a href="#乘积格" class="headerlink" title="乘积格"></a>乘积格</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E4%B9%98%E7%A7%AF%E6%A0%BC%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<p>乘积格是一个格</p>
+<p>若乘积格是全格的乘积，则该乘积格也是全格</p>
+<h5 id="基于格的数据流分析框架"><a href="#基于格的数据流分析框架" class="headerlink" title="基于格的数据流分析框架"></a>基于格的数据流分析框架</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90%E6%A1%86%E6%9E%B6.png?raw=true"></p>
+<p>数据流分析可以看作: 对格中元素迭代地应用迁移函数与合并操作</p>
+<h5 id="单调性和不动点定理"><a href="#单调性和不动点定理" class="headerlink" title="单调性和不动点定理"></a>单调性和不动点定理</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%8D%95%E8%B0%83%E6%80%A7%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E4%B8%8D%E5%8A%A8%E7%82%B9%E5%AE%9A%E7%90%86.png?raw=true"></p>
+<h5 id="迭代算法与不动点定理关联"><a href="#迭代算法与不动点定理关联" class="headerlink" title="迭代算法与不动点定理关联"></a>迭代算法与不动点定理关联</h5><p>k个结点对应乘积格$L^k$ ，且当$L$为全格时，$L^k$也为全格</p>
+<p>每一次迭代，等价于: 应用函数$F$​，其包含了迁移函数与合并操作</p>
+<p>其中，迁移函数是单调的，经证明合并操作亦单调. 即: 不动点定理可用于迭代算法.</p>
+<h6 id="何时到达不动点"><a href="#何时到达不动点" class="headerlink" title="何时到达不动点"></a>何时到达不动点</h6><p>格的高度$h$为从顶端到底端的最长路径的长度. 记CFG有$k$个结点，若每次迭代中，仅有一个结点的值在格上前进一步，则最多需要$h\times k$次迭代. </p>
+<h5 id="格视角下的may-must分析"><a href="#格视角下的may-must分析" class="headerlink" title="格视角下的may/must分析"></a>格视角下的may/must分析</h5><p>以reaching definition analysis的may analysis为例.</p>
+<p>既然是may，那么“所有定义都具有可能性”是完全正确的，只是没有作用. 因此Top是最安全的一端，与此相对，Bottom是unsafe的一端. 同时，对于每个分析对象，必然有一个客观存在的真相，只是算法未必能精确找. 但它的存在将格中元素划分为safe与unsafe两部分，over-approximation就是尽可能向safe端over，以保证正确性. </p>
+<p>在over-approximation下，达到的第一个不动点便是最佳解，因为函数的单调性使得越往后执行，距离格的顶端越近，即: 离真相越远，精度下降.</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgmay,must.png?raw=true"></p>
+<h5 id="MOP和分配性"><a href="#MOP和分配性" class="headerlink" title="MOP和分配性"></a>MOP和分配性</h5><h6 id="Meet-Over-All-Paths-Solution-MOP"><a href="#Meet-Over-All-Paths-Solution-MOP" class="headerlink" title="Meet-Over-All-Paths Solution(MOP)"></a>Meet-Over-All-Paths Solution(MOP)</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/imgMOP.png?raw=true"></p>
+<p>MOP分别计算每条路径所得value，并在末尾处将其合并，取得最小上界或最大下界. 但由于有些路径在运行时可能不会被执行，所以MOP并不完全精确. 此外，实际程序中往往有数以亿计的路径，路径上更有很多结点，该方法并不实际可行. 但它提供了一个精度的衡量.</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgiterative_vs_mop.png?raw=true"></p>
+<p>证明可得: MOP更加接近truth，更为精准. </p>
+<p>当$F$​满足分配性时，两者相等. (gen/kill problems 都可分配)</p>
+<h5 id="常量传播"><a href="#常量传播" class="headerlink" title="常量传播"></a>常量传播</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD.png?raw=true"></p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%EF%BC%88%E6%A0%BC%EF%BC%89.png?raw=true"></p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%EF%BC%88%E8%BF%81%E7%A7%BB%E5%87%BD%E6%95%B0%EF%BC%89.png?raw=true"></p>
+<p>常量传播不具备分配性</p>
+<h5 id="worklist算法"><a href="#worklist算法" class="headerlink" title="worklist算法"></a>worklist算法</h5><p>迭代算法的一种优化</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgworklist.png?raw=true"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/10/27/L3-4-Data-Flow-Analysis-Applications/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tkuang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tianyu-monica's space">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/27/L3-4-Data-Flow-Analysis-Applications/" class="post-title-link" itemprop="url">L3-4 Data Flow Analysis (Applications)</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-10-27 16:25:50 / Modified: 16:42:12" itemprop="dateCreated datePublished" datetime="2021-10-27T16:25:50+08:00">2021-10-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Static-Analysis/" itemprop="url" rel="index"><span itemprop="name">Static Analysis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h5 id="数据流分析总览"><a href="#数据流分析总览" class="headerlink" title="数据流分析总览"></a>数据流分析总览</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90%E6%80%BB%E8%A7%88.png?raw=true"></p>
+<p>静态分析关键词: Abstraction，Over-approximation</p>
+<p>may analysis: </p>
+<p>Outputs information that may be true(over-approximation)</p>
+<p>must analysis:</p>
+<p>Outputs information that must be true(under-approximation)</p>
+<p>over- and under-approximation are both for <strong>safety of analysis</strong></p>
+<h5 id="准备知识"><a href="#准备知识" class="headerlink" title="准备知识"></a>准备知识</h5><h6 id="Input-and-Output-States"><a href="#Input-and-Output-States" class="headerlink" title="Input and Output States"></a>Input and Output States</h6><ul>
+<li><p>each execution of an IR statement transforms an <strong>input state</strong> to a new <strong>output state</strong></p>
+</li>
+<li><p>the input (output) state is associated with the program point before (after) the statement</p>
+</li>
+</ul>
+<p>数据流分析的目的是: 为所有语句的输入输出找到一组，基于控制流和迁移函数的，安全近似约束的解决方案.</p>
+<h6 id="基于迁移函数的约束"><a href="#基于迁移函数的约束" class="headerlink" title="基于迁移函数的约束"></a>基于迁移函数的约束</h6><p>Forward Analysis: $OUT[s]=f_s(IN[s])$</p>
+<p>Backward Analysis: $IN[s]=f_s(OUT[s])$</p>
+<h6 id="基于控制流的约束"><a href="#基于控制流的约束" class="headerlink" title="基于控制流的约束"></a>基于控制流的约束</h6><p>Control flow within a BB: $IN[s_{i+1}]=OUT[s_i],for\ i=1,2,……,n-1$​</p>
+<p>Control flow among BBs: $IN[B]=IN[s_1],OUT[B]=OUT[s_n]$ </p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%8E%A7%E5%88%B6%E6%B5%81%E7%BA%A6%E6%9D%9F.png?raw=true"></p>
+<h5 id="可达定义分析-Reaching-Definitions-Analysis"><a href="#可达定义分析-Reaching-Definitions-Analysis" class="headerlink" title="可达定义分析(Reaching Definitions Analysis)"></a>可达定义分析(Reaching Definitions Analysis)</h5><p><strong>A definition d</strong> at program point p reaches a point q if there is a path from p to q such that d is not killed along that path.</p>
+<p>即: 在p点对变量v进行赋值，从p到q的路径中，没有对v的重新定义</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%8F%AF%E8%BE%BE%E6%80%A7%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<p>可用来检测可能的未定义变量：在entry中引入虚拟定义，若能reach某个点，则该变量可能未定义.</p>
+<ul>
+<li><p>Abstraction </p>
+<p>Data Flow Values: <u>the definitions</u> of all the variables in a program</p>
+</li>
+<li><p>Safe-approximation</p>
+<p>Transfer Function: $OUT[B]=gen_B\cup(IN[B]-kill_B)$​</p>
+<p>某语句中定义了变量v，即为generate了该定义，并将其他语句中v的赋值kill</p>
+<p>Control Flow: $IN[B]=\cup_{P\ a\ predecessor\ of\ B}OUT[P]$​ </p>
+<p>(只要有一条路径可使v到达某点，则v可达该点. 因此取并集)</p>
+</li>
+</ul>
+<h6 id="Algorithm-of-Reaching-Definitions-Analysis"><a href="#Algorithm-of-Reaching-Definitions-Analysis" class="headerlink" title="Algorithm of Reaching Definitions Analysis"></a>Algorithm of Reaching Definitions Analysis</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%8F%AF%E8%BE%BE%E5%AE%9A%E4%B9%89%E5%88%86%E6%9E%90%E7%AE%97%E6%B3%95.png?raw=true"></p>
+<p>第一行单独初始化boundary: 作为一个经典迭代算法的模板，可适用所有数据流分析，存在其他分析方法使boundary和其他结点初始化值不一样的情况.</p>
+<p>算法为什么能停？</p>
+<p>对于每个BB，$gen_{B}$和$kill_B$在每次迭代过程中保持不变，仅当$IN[B]$改变时，$OUT[B]$​有可能改变，对于每个加入$OUT[B]$的fact，或者在$gen_B$中，或者未被kill，无论哪种情况，其都会一直留存. 即: $OUT[B]$​单调增加. 同时，fact的集合有限，因此必能停止. </p>
+<p>当满足条件: 任何$OUT$都不再改变时，循环停止. 显然，$IN$作为$OUT$的并集，也随之不再改变. 同时，$gen_B,kill_B$​本身不变，算法达到一个不动点(<strong>fixed point</strong>). </p>
+<h5 id="存活变量分析-Live-Variables-Analysis"><a href="#存活变量分析-Live-Variables-Analysis" class="headerlink" title="存活变量分析(Live Variables Analysis)"></a>存活变量分析(Live Variables Analysis)</h5><p>Live variables analysis tells whether the value of <strong>variable v</strong> at program point p could be used along some path in CFG starting at p. If so, v is live at p; otherwise, v is dead at p.</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%AD%98%E6%B4%BB%E5%8F%98%E9%87%8F%E5%88%86%E6%9E%90.png?raw=true"></p>
+<p>可用于寄存器分配: 无空寄存器时，使用寄存器优先考虑存储值dead的寄存器. </p>
+<ul>
+<li><p>Abstraction</p>
+<p>Data Flow Values: <u>all the variables</u> in a program</p>
+</li>
+<li><p>Safe-approximation</p>
+<p>适用后向分析: 从后往前搜索，只要在某点找到一个变量v的使用，即证明在此之前可达该点的，定义了v的程序点处，v都是live. </p>
+<p>Transfer Function: $IN[B]=use_B\cup(OUT[B]-def_B)$​ </p>
+<p>同一变量，先use，再redefine，仍然存活. 未使用就重新定义则dead. </p>
+<p>Control Flow: $OUT[B]=\cup_{S\ a\ successor\ of\ B}IN[S]$ </p>
+<p>只要变量v之后有一条路径可使用，则该变量为live，因此使用并集</p>
+</li>
+</ul>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%AD%98%E6%B4%BB%E5%8F%98%E9%87%8F%E8%BF%81%E7%A7%BB%E5%87%BD%E6%95%B0.png?raw=true"></p>
+<h6 id="Algorithm-of-Live-Variables-Analysis"><a href="#Algorithm-of-Live-Variables-Analysis" class="headerlink" title="Algorithm of Live Variables Analysis"></a>Algorithm of Live Variables Analysis</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%AD%98%E6%B4%BB%E5%8F%98%E9%87%8F%E5%88%86%E6%9E%90%E7%AE%97%E6%B3%95.png?raw=true"></p>
+<h5 id="可用表达式分析-Available-Expression-Analysis"><a href="#可用表达式分析-Available-Expression-Analysis" class="headerlink" title="可用表达式分析(Available Expression Analysis)"></a>可用表达式分析(Available Expression Analysis)</h5><p><strong>An expression x op y</strong> is available at program point p if: </p>
+<p>(1)<strong>all</strong> paths from the entry to p <strong>must</strong> pass through the evaluation x op y</p>
+<p>(2)after the last evaluation of x op y, there is no redefinition of x or y</p>
+<p>意味着，若p处某表达式可用，则能将其替换为最后一次运算的结果. </p>
+<p>可用于检测全局通用表达式</p>
+<ul>
+<li><p>Abstraction</p>
+<p>Data Flow Values: all the expressions in aprogram</p>
+</li>
+<li><p>Safe-approximation: </p>
+<p>Transfer Function: $OUT[B]=gen_B\cup(IN[B]-kill_B)$ </p>
+<p>Control Flow: $IN[B]=\cap_{P\ a\ predecessor\ of\ B}OUT[P]$ </p>
+<p>到达该点前的每条路径都必须计算过x op y，因此使用交集. </p>
+</li>
+</ul>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%8F%AF%E7%94%A8%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%88%86%E6%9E%90%E8%BF%81%E7%A7%BB%E5%87%BD%E6%95%B0.png?raw=true"></p>
+<h6 id="Algorithm-of-Available-Expressions-Analysis"><a href="#Algorithm-of-Available-Expressions-Analysis" class="headerlink" title="Algorithm of Available Expressions Analysis"></a>Algorithm of Available Expressions Analysis</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%8F%AF%E7%94%A8%E8%A1%A8%E8%BE%BE%E5%88%86%E6%9E%90%E7%AE%97%E6%B3%95.png?raw=true"></p>
+<h5 id="分析比较"><a href="#分析比较" class="headerlink" title="分析比较"></a>分析比较</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%88%86%E6%9E%90%E6%AF%94%E8%BE%83.png?raw=true"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/10/27/L2-Intermediate-Representation/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tkuang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tianyu-monica's space">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/27/L2-Intermediate-Representation/" class="post-title-link" itemprop="url">L2 Intermediate Representation</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-10-27 16:23:07 / Modified: 16:34:36" itemprop="dateCreated datePublished" datetime="2021-10-27T16:23:07+08:00">2021-10-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Static-Analysis/" itemprop="url" rel="index"><span itemprop="name">Static Analysis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>程序源码直接拿来给静态分析器做静态分析是不合适的，像编译一样也需要<strong>在程序的中间表示(IR)上进行分析</strong>，这样能让静态分析算法比较简洁、高效.</p>
+<h5 id="编译的基本流程"><a href="#编译的基本流程" class="headerlink" title="编译的基本流程"></a>编译的基本流程</h5><h6 id="1-1词法分析"><a href="#1-1词法分析" class="headerlink" title="1.1词法分析"></a>1.1词法分析</h6><p>词法分析(Lexical Analysis)会去检查是否输入的源代码是若干合法单词的组合.词法分析器统称<strong>Scanner</strong>，运行时需要关键字的词典，以及用<strong>正则表达式</strong>描述的词法规则.</p>
+<p>词法分析会为每个合法的单词生成<strong>Token</strong>.</p>
+<h6 id="1-2语法分析"><a href="#1-2语法分析" class="headerlink" title="1.2语法分析"></a>1.2语法分析</h6><p>语法分析(Syntax Analysis)会去检查这些Token的组合形式是否符合语法规则.语法分析器统称Parser，相应的描述语法规则的方式是<strong>上下文无关文法(Context-Free Grammer)</strong>.Context-Free Grammer的表达能力比Context-Sensitive Grammer弱，但是对几乎所有的编程语言而言，这样的表达能力就足够了，如果去使用后者反倒会更慢.</p>
+<p>语法分析会生成<strong>抽象语法树(AST)</strong>.</p>
+<h6 id="1-3语义分析"><a href="#1-3语义分析" class="headerlink" title="1.3语义分析"></a>1.3语义分析</h6><p>语义分析(Semantic Analysis)会去检查语义是否合理.和自然语言的语义不同，对编译器而言，只具备检查简单的语义的功能，如<strong>类型检查器(Type Checker)<strong>，相应的进行类型检查时描述规则的方法是</strong>Attribute Grammer</strong>.</p>
+<p>语义分析会生成<strong>Decorated AST</strong>.</p>
+<h6 id="1-4转换"><a href="#1-4转换" class="headerlink" title="1.4转换"></a>1.4转换</h6><p>如果编译器有编译优化的功能，那么就要通过<strong>转换器(Translator) <strong>转换成</strong>中间表示(IR)</strong> 的形式，这里的中间表示IR通常指的都是<strong>三地址码形式(3-Address Form)</strong>.</p>
+<p>生成IR之前的部分是<strong>编译器前端</strong>，生成IR之后的部分是<strong>编译器后端</strong>.编译优化就是静态分析的一种应用，静态分析是在IR的基础上做的，所以是属于编译器后端.这也说明了，要做静态分析，就不得不走完编译器前端的部分才能拿到IR，接着再在IR的基础上做分析.</p>
+<h6 id="1-5生成"><a href="#1-5生成" class="headerlink" title="1.5生成"></a>1.5生成</h6><p>为了能执行，要将上一步的中间表示，通过<strong>代码生成器(Code Generator)</strong> 生成<strong>机器码(Machine Code)</strong>.</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E7%A8%8B%E5%BA%8F%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B.png?raw=true"></p>
+<h5 id="AST与三地址码的比较"><a href="#AST与三地址码的比较" class="headerlink" title="AST与三地址码的比较"></a>AST与三地址码的比较</h5><h6 id="AST"><a href="#AST" class="headerlink" title="AST"></a>AST</h6><p>较高层，贴合编程语言的语法结构</p>
+<p>通常依赖于具体的编程语言</p>
+<p>适合快速进行类型检查</p>
+<p>缺少控制流信息</p>
+<h6 id="3-address"><a href="#3-address" class="headerlink" title="3-address"></a>3-address</h6><p>较底层，接近于机器码</p>
+<p>通常与编程语言无关</p>
+<p>简洁、格式统一</p>
+<p>易看出控制流信息</p>
+<p>通常作为静态分析的IR的通用格式</p>
+<h5 id="三地址码简述"><a href="#三地址码简述" class="headerlink" title="三地址码简述"></a>三地址码简述</h5><p>每条指令最多包含三个地址，其中地址指: 变量、常量、静态分析器自动生成的临时变量</p>
+<p>如: <code>x = y op z</code> <code>if x goto L</code></p>
+<h5 id="静态单赋值-SSA"><a href="#静态单赋值-SSA" class="headerlink" title="静态单赋值(SSA)"></a>静态单赋值(SSA)</h5><p>一种经典的IR格式，与普通的三地址码的区别在于: 每一个定义都使用了新的名称</p>
+<h6 id="phi-function"><a href="#phi-function" class="headerlink" title="phi-function"></a>phi-function</h6><p>若出现控制流回合等情况，可使用 $\phi$​ 函数进行聚合</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%8E%A7%E5%88%B6%E6%B5%81%E6%B1%87%E5%90%88%E6%97%B6SSA%E9%87%87%E7%94%A8phi-function.png?raw=true"></p>
+<p>根据程序流程选择对应值</p>
+<h6 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h6><ul>
+<li>将flow-sensitive的指令变为flow-insensitive，即: 对指令的顺序不再敏感，可以提高分析速度.同时，因为本身带有的flow信息，可以较好保持flow-sensitive的精度.</li>
+<li>可以更精确找到其定义处，因为每条都是新定义</li>
+<li>引入太多变量和phi-function</li>
+<li>转换到机器码时，有很多低效代码</li>
+</ul>
+<h5 id="控制流分析"><a href="#控制流分析" class="headerlink" title="控制流分析"></a>控制流分析</h5><p>通常指: 构建控制流图**(Control Flow Graph)**</p>
+<p>CFG作为静态分析的基础结构，其中的结点(node)可以是独立的三地址码，也可以是一个<strong>基本块(Basic Block)</strong>.</p>
+<h5 id="基本块"><a href="#基本块" class="headerlink" title="基本块"></a>基本块</h5><p>Basic Block 是连续三地址码的最大序列，并满足以下条件: </p>
+<ul>
+<li>只能从开头处进入</li>
+<li>只能从结尾处离开</li>
+</ul>
+<h6 id="构建Basic-Blocks"><a href="#构建Basic-Blocks" class="headerlink" title="构建Basic Blocks"></a>构建Basic Blocks</h6><p>确定程序P中的<strong>leaders</strong></p>
+<ul>
+<li>P的第一条指令</li>
+<li>条件跳转或无条件跳转的目标指令</li>
+<li>紧跟在条件跳转或无条件跳转指令后</li>
+</ul>
+<p>一个BB从一个leader开始到下一个leader开始前</p>
+<h5 id="基于BBs构建CFG"><a href="#基于BBs构建CFG" class="headerlink" title="基于BBs构建CFG"></a>基于BBs构建CFG</h5><p>Basic Block作为结点，block A 有一条边指向block B 当且仅当: </p>
+<ul>
+<li>有一个条件跳转或无条件跳转从A的结尾跳至B的开头</li>
+<li>B紧跟在A之后，且A的结尾不是无条件跳转</li>
+</ul>
+<p>通常添加Entry、Exit两个节点，分别指向P的第一条指令及继承于P的最后一条指令.</p>
+<h5 id="Highlight"><a href="#Highlight" class="headerlink" title="Highlight"></a>Highlight</h5><h6 id="The-relation-between-compilers-and-static-analyzer"><a href="#The-relation-between-compilers-and-static-analyzer" class="headerlink" title="The relation between compilers and static analyzer"></a>The relation between compilers and static analyzer</h6><p>编译的过程要经过中间表示，静态分析器也需要在中间表示上进行</p>
+<h6 id="Understand-3AC-and-its-common-forms"><a href="#Understand-3AC-and-its-common-forms" class="headerlink" title="Understand 3AC and its common forms"></a>Understand 3AC and its common forms</h6><p>指令的右侧最多只有一个操作符，每个指令最多含有三个地址（变量、常量、编译器生成的临时变量）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">x = y bop z</span><br><span class="line">x = uop y</span><br><span class="line">x = y</span><br><span class="line">goto L</span><br><span class="line">if x goto L</span><br><span class="line">if x rop y goto L</span><br></pre></td></tr></table></figure>
+
+<h6 id="How-to-build-basic-blocks-on-top-of-IR"><a href="#How-to-build-basic-blocks-on-top-of-IR" class="headerlink" title="How to build basic blocks on top of IR"></a>How to build basic blocks on top of IR</h6><p>找到leaders (第一条；跳转目标指令；跳转指令下一条)</p>
+<p>从一个leader开始，到下一个leader开始前结束</p>
+<h6 id="How-to-construct-control-flow-graphs-on-top-of-BBs"><a href="#How-to-construct-control-flow-graphs-on-top-of-BBs" class="headerlink" title="How to construct control flow graphs on top of BBs"></a>How to construct control flow graphs on top of BBs</h6><p>连接各基本块: </p>
+<p>A的结尾跳转至B的开头；</p>
+<p>B紧跟A，且A的结尾不是无条件跳转；</p>
+<p>添加Entry、Exit</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/10/27/L1-Introduction/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -560,7 +1080,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

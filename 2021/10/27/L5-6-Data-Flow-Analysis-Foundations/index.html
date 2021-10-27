@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="另一个视角下的迭代算法  当$X&#x3D;F(X)$时，$X$即为函数$F$的不动点 偏序poset: 偏序集  偏序意味着: P中的一对元素可以不可比，即: 不是任意对元素都满足偏序关系. 上界和下界 最小上界和最大下界 两个元素间的最小上界和最大下界 并非所有偏序集都一定存在最小上界和最大下界，但若存在，则唯一 格、半格、全格、乘积格格 半格 全格 即: 任意子集的最小上界和最大下界都存在  每个有界">
+<meta property="og:type" content="article">
+<meta property="og:title" content="L5-6 Data Flow Analysis (Foundations)">
+<meta property="og:url" content="http://example.com/2021/10/27/L5-6-Data-Flow-Analysis-Foundations/index.html">
+<meta property="og:site_name" content="tianyu-monica&#39;s space">
+<meta property="og:description" content="另一个视角下的迭代算法  当$X&#x3D;F(X)$时，$X$即为函数$F$的不动点 偏序poset: 偏序集  偏序意味着: P中的一对元素可以不可比，即: 不是任意对元素都满足偏序关系. 上界和下界 最小上界和最大下界 两个元素间的最小上界和最大下界 并非所有偏序集都一定存在最小上界和最大下界，但若存在，则唯一 格、半格、全格、乘积格格 半格 全格 即: 任意子集的最小上界和最大下界都存在  每个有界">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E5%8F%A6%E4%B8%80%E4%B8%AA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84%E8%BF%AD%E4%BB%A3%E7%AE%97%E6%B3%95.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E8%BF%AD%E4%BB%A3%E8%87%B3%E4%B8%8D%E5%8A%A8%E7%82%B9.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E5%81%8F%E5%BA%8F%E5%AE%9A%E4%B9%89.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E4%B8%8A%E7%95%8C%E5%92%8C%E4%B8%8B%E7%95%8C%E5%AE%9A%E4%B9%89.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E6%9C%80%E5%B0%8F%E4%B8%8A%E7%95%8C%E5%92%8C%E6%9C%80%E5%A4%A7%E4%B8%8B%E7%95%8C.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E4%B8%A4%E5%85%83%E7%B4%A0%E6%9C%80%E5%B0%8F%E4%B8%8A%E7%95%8C%E5%92%8C%E6%9C%80%E5%A4%A7%E4%B8%8B%E7%95%8C.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E6%A0%BC%E5%AE%9A%E4%B9%89.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E5%8D%8A%E6%A0%BC.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E5%85%A8%E6%A0%BC.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E5%85%A8%E6%A0%BC%E6%80%A7%E8%B4%A8.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E4%B9%98%E7%A7%AF%E6%A0%BC%E5%AE%9A%E4%B9%89.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90%E6%A1%86%E6%9E%B6.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E5%8D%95%E8%B0%83%E6%80%A7%E5%AE%9A%E4%B9%89.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E4%B8%8D%E5%8A%A8%E7%82%B9%E5%AE%9A%E7%90%86.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/imgmay,must.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/imgMOP.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/imgiterative_vs_mop.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%EF%BC%88%E6%A0%BC%EF%BC%89.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%EF%BC%88%E8%BF%81%E7%A7%BB%E5%87%BD%E6%95%B0%EF%BC%89.png?raw=true">
+<meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/imgworklist.png?raw=true">
+<meta property="article:published_time" content="2021-10-27T08:26:54.000Z">
+<meta property="article:modified_time" content="2021-10-27T08:56:43.654Z">
+<meta property="article:author" content="Tkuang">
+<meta property="article:tag" content="course">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E5%8F%A6%E4%B8%80%E4%B8%AA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84%E8%BF%AD%E4%BB%A3%E7%AE%97%E6%B3%95.png?raw=true">
+
+<link rel="canonical" href="http://example.com/2021/10/27/L5-6-Data-Flow-Analysis-Foundations/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>L5-6 Data Flow Analysis (Foundations) | tianyu-monica's space</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">tianyu-monica's space</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/10/27/L5-6-Data-Flow-Analysis-Foundations/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tkuang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tianyu-monica's space">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          L5-6 Data Flow Analysis (Foundations)
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-10-27 16:26:54 / Modified: 16:56:43" itemprop="dateCreated datePublished" datetime="2021-10-27T16:26:54+08:00">2021-10-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Static-Analysis/" itemprop="url" rel="index"><span itemprop="name">Static Analysis</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="Views" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">Views: </span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h5 id="另一个视角下的迭代算法"><a href="#另一个视角下的迭代算法" class="headerlink" title="另一个视角下的迭代算法"></a>另一个视角下的迭代算法</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%8F%A6%E4%B8%80%E4%B8%AA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84%E8%BF%AD%E4%BB%A3%E7%AE%97%E6%B3%95.png?raw=true"></p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E8%BF%AD%E4%BB%A3%E8%87%B3%E4%B8%8D%E5%8A%A8%E7%82%B9.png?raw=true"></p>
+<p>当$X=F(X)$时，$X$即为函数$F$的不动点</p>
+<h5 id="偏序"><a href="#偏序" class="headerlink" title="偏序"></a>偏序</h5><p>poset: 偏序集</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%81%8F%E5%BA%8F%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<p>偏序意味着: P中的一对元素可以<strong>不可比</strong>，即: 不是任意对元素都满足偏序关系.</p>
+<h5 id="上界和下界"><a href="#上界和下界" class="headerlink" title="上界和下界"></a>上界和下界</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E4%B8%8A%E7%95%8C%E5%92%8C%E4%B8%8B%E7%95%8C%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<h6 id="最小上界和最大下界"><a href="#最小上界和最大下界" class="headerlink" title="最小上界和最大下界"></a>最小上界和最大下界</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%9C%80%E5%B0%8F%E4%B8%8A%E7%95%8C%E5%92%8C%E6%9C%80%E5%A4%A7%E4%B8%8B%E7%95%8C.png?raw=true"></p>
+<h6 id="两个元素间的最小上界和最大下界"><a href="#两个元素间的最小上界和最大下界" class="headerlink" title="两个元素间的最小上界和最大下界"></a>两个元素间的最小上界和最大下界</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E4%B8%A4%E5%85%83%E7%B4%A0%E6%9C%80%E5%B0%8F%E4%B8%8A%E7%95%8C%E5%92%8C%E6%9C%80%E5%A4%A7%E4%B8%8B%E7%95%8C.png?raw=true"></p>
+<p>并非所有偏序集都一定存在最小上界和最大下界，但若存在，则<strong>唯一</strong></p>
+<h5 id="格、半格、全格、乘积格"><a href="#格、半格、全格、乘积格" class="headerlink" title="格、半格、全格、乘积格"></a>格、半格、全格、乘积格</h5><h6 id="格"><a href="#格" class="headerlink" title="格"></a>格</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%A0%BC%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<h6 id="半格"><a href="#半格" class="headerlink" title="半格"></a>半格</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%8D%8A%E6%A0%BC.png?raw=true"></p>
+<h6 id="全格"><a href="#全格" class="headerlink" title="全格"></a>全格</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%85%A8%E6%A0%BC.png?raw=true"></p>
+<p>即: <strong>任意子集</strong>的最小上界和最大下界都存在</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%85%A8%E6%A0%BC%E6%80%A7%E8%B4%A8.png?raw=true"></p>
+<p>每个<strong>有界格</strong>(P有限)都是一个全格</p>
+<h6 id="乘积格"><a href="#乘积格" class="headerlink" title="乘积格"></a>乘积格</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E4%B9%98%E7%A7%AF%E6%A0%BC%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<p>乘积格是一个格</p>
+<p>若乘积格是全格的乘积，则该乘积格也是全格</p>
+<h5 id="基于格的数据流分析框架"><a href="#基于格的数据流分析框架" class="headerlink" title="基于格的数据流分析框架"></a>基于格的数据流分析框架</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90%E6%A1%86%E6%9E%B6.png?raw=true"></p>
+<p>数据流分析可以看作: 对格中元素迭代地应用迁移函数与合并操作</p>
+<h5 id="单调性和不动点定理"><a href="#单调性和不动点定理" class="headerlink" title="单调性和不动点定理"></a>单调性和不动点定理</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%8D%95%E8%B0%83%E6%80%A7%E5%AE%9A%E4%B9%89.png?raw=true"></p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E4%B8%8D%E5%8A%A8%E7%82%B9%E5%AE%9A%E7%90%86.png?raw=true"></p>
+<h5 id="迭代算法与不动点定理关联"><a href="#迭代算法与不动点定理关联" class="headerlink" title="迭代算法与不动点定理关联"></a>迭代算法与不动点定理关联</h5><p>k个结点对应乘积格$L^k$ ，且当$L$为全格时，$L^k$也为全格</p>
+<p>每一次迭代，等价于: 应用函数$F$​，其包含了迁移函数与合并操作</p>
+<p>其中，迁移函数是单调的，经证明合并操作亦单调. 即: 不动点定理可用于迭代算法.</p>
+<h6 id="何时到达不动点"><a href="#何时到达不动点" class="headerlink" title="何时到达不动点"></a>何时到达不动点</h6><p>格的高度$h$为从顶端到底端的最长路径的长度. 记CFG有$k$个结点，若每次迭代中，仅有一个结点的值在格上前进一步，则最多需要$h\times k$次迭代. </p>
+<h5 id="格视角下的may-must分析"><a href="#格视角下的may-must分析" class="headerlink" title="格视角下的may/must分析"></a>格视角下的may/must分析</h5><p>以reaching definition analysis的may analysis为例.</p>
+<p>既然是may，那么“所有定义都具有可能性”是完全正确的，只是没有作用. 因此Top是最安全的一端，与此相对，Bottom是unsafe的一端. 同时，对于每个分析对象，必然有一个客观存在的真相，只是算法未必能精确找. 但它的存在将格中元素划分为safe与unsafe两部分，over-approximation就是尽可能向safe端over，以保证正确性. </p>
+<p>在over-approximation下，达到的第一个不动点便是最佳解，因为函数的单调性使得越往后执行，距离格的顶端越近，即: 离真相越远，精度下降.</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgmay,must.png?raw=true"></p>
+<h5 id="MOP和分配性"><a href="#MOP和分配性" class="headerlink" title="MOP和分配性"></a>MOP和分配性</h5><h6 id="Meet-Over-All-Paths-Solution-MOP"><a href="#Meet-Over-All-Paths-Solution-MOP" class="headerlink" title="Meet-Over-All-Paths Solution(MOP)"></a>Meet-Over-All-Paths Solution(MOP)</h6><p><img src="https://github.com/tianyu-monica/imag/blob/main/imgMOP.png?raw=true"></p>
+<p>MOP分别计算每条路径所得value，并在末尾处将其合并，取得最小上界或最大下界. 但由于有些路径在运行时可能不会被执行，所以MOP并不完全精确. 此外，实际程序中往往有数以亿计的路径，路径上更有很多结点，该方法并不实际可行. 但它提供了一个精度的衡量.</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgiterative_vs_mop.png?raw=true"></p>
+<p>证明可得: MOP更加接近truth，更为精准. </p>
+<p>当$F$​满足分配性时，两者相等. (gen/kill problems 都可分配)</p>
+<h5 id="常量传播"><a href="#常量传播" class="headerlink" title="常量传播"></a>常量传播</h5><p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD.png?raw=true"></p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%EF%BC%88%E6%A0%BC%EF%BC%89.png?raw=true"></p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD%EF%BC%88%E8%BF%81%E7%A7%BB%E5%87%BD%E6%95%B0%EF%BC%89.png?raw=true"></p>
+<p>常量传播不具备分配性</p>
+<h5 id="worklist算法"><a href="#worklist算法" class="headerlink" title="worklist算法"></a>worklist算法</h5><p>迭代算法的一种优化</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgworklist.png?raw=true"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/course/" rel="tag"># course</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/10/27/L3-4-Data-Flow-Analysis-Applications/" rel="prev" title="L3-4 Data Flow Analysis (Applications)">
+      <i class="fa fa-chevron-left"></i> L3-4 Data Flow Analysis (Applications)
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/10/27/L7-Interprocedural-Analysis/" rel="next" title="L7 Interprocedural Analysis">
+      L7 Interprocedural Analysis <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8F%A6%E4%B8%80%E4%B8%AA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84%E8%BF%AD%E4%BB%A3%E7%AE%97%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">另一个视角下的迭代算法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%81%8F%E5%BA%8F"><span class="nav-number">2.</span> <span class="nav-text">偏序</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%8A%E7%95%8C%E5%92%8C%E4%B8%8B%E7%95%8C"><span class="nav-number">3.</span> <span class="nav-text">上界和下界</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%9C%80%E5%B0%8F%E4%B8%8A%E7%95%8C%E5%92%8C%E6%9C%80%E5%A4%A7%E4%B8%8B%E7%95%8C"><span class="nav-number">3.1.</span> <span class="nav-text">最小上界和最大下界</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%B8%A4%E4%B8%AA%E5%85%83%E7%B4%A0%E9%97%B4%E7%9A%84%E6%9C%80%E5%B0%8F%E4%B8%8A%E7%95%8C%E5%92%8C%E6%9C%80%E5%A4%A7%E4%B8%8B%E7%95%8C"><span class="nav-number">3.2.</span> <span class="nav-text">两个元素间的最小上界和最大下界</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%A0%BC%E3%80%81%E5%8D%8A%E6%A0%BC%E3%80%81%E5%85%A8%E6%A0%BC%E3%80%81%E4%B9%98%E7%A7%AF%E6%A0%BC"><span class="nav-number">4.</span> <span class="nav-text">格、半格、全格、乘积格</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%A0%BC"><span class="nav-number">4.1.</span> <span class="nav-text">格</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%8D%8A%E6%A0%BC"><span class="nav-number">4.2.</span> <span class="nav-text">半格</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E5%85%A8%E6%A0%BC"><span class="nav-number">4.3.</span> <span class="nav-text">全格</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%B9%98%E7%A7%AF%E6%A0%BC"><span class="nav-number">4.4.</span> <span class="nav-text">乘积格</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E6%A0%BC%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81%E5%88%86%E6%9E%90%E6%A1%86%E6%9E%B6"><span class="nav-number">5.</span> <span class="nav-text">基于格的数据流分析框架</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8D%95%E8%B0%83%E6%80%A7%E5%92%8C%E4%B8%8D%E5%8A%A8%E7%82%B9%E5%AE%9A%E7%90%86"><span class="nav-number">6.</span> <span class="nav-text">单调性和不动点定理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%BF%AD%E4%BB%A3%E7%AE%97%E6%B3%95%E4%B8%8E%E4%B8%8D%E5%8A%A8%E7%82%B9%E5%AE%9A%E7%90%86%E5%85%B3%E8%81%94"><span class="nav-number">7.</span> <span class="nav-text">迭代算法与不动点定理关联</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BD%95%E6%97%B6%E5%88%B0%E8%BE%BE%E4%B8%8D%E5%8A%A8%E7%82%B9"><span class="nav-number">7.1.</span> <span class="nav-text">何时到达不动点</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%A0%BC%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84may-must%E5%88%86%E6%9E%90"><span class="nav-number">8.</span> <span class="nav-text">格视角下的may&#x2F;must分析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#MOP%E5%92%8C%E5%88%86%E9%85%8D%E6%80%A7"><span class="nav-number">9.</span> <span class="nav-text">MOP和分配性</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#Meet-Over-All-Paths-Solution-MOP"><span class="nav-number">9.1.</span> <span class="nav-text">Meet-Over-All-Paths Solution(MOP)</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B8%B8%E9%87%8F%E4%BC%A0%E6%92%AD"><span class="nav-number">10.</span> <span class="nav-text">常量传播</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#worklist%E7%AE%97%E6%B3%95"><span class="nav-number">11.</span> <span class="nav-text">worklist算法</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Tkuang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tkuang</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="Total Visitors">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="Total Views">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
