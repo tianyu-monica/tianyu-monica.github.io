@@ -20,17 +20,17 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="程序源码直接拿来给静态分析器做静态分析是不合适的，像编译一样也需要在程序的中间表示(IR)上进行分析，这样能让静态分析算法比较简洁、高效. 编译的基本流程1.1词法分析词法分析(Lexical Analysis)会去检查是否输入的源代码是若干合法单词的组合.词法分析器统称Scanner，运行时需要关键字的词典，以及用正则表达式描述的词法规则. 词法分析会为每个合法的单词生成Token. 1.2语法">
+  <meta name="description" content="程序源码直接拿来给静态分析器做静态分析是不合适的，像编译一样也需要在程序的中间表示(IR)上进行分析，这样能让静态分析算法比较简洁、高效. 编译的基本流程1.1词法分析词法分析(Lexical Analysis)会去检查是否输入的源代码是若干合法单词的组合.词法分析器统称Scanner，运行时需要关键字的词典，以及用正则表达式描述的词法规则. 词法分析会为每个合法的单词生成Token.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="L2 Intermediate Representation">
 <meta property="og:url" content="http://example.com/2021/10/27/L2-Intermediate-Representation/index.html">
 <meta property="og:site_name" content="tianyu-monica&#39;s space">
-<meta property="og:description" content="程序源码直接拿来给静态分析器做静态分析是不合适的，像编译一样也需要在程序的中间表示(IR)上进行分析，这样能让静态分析算法比较简洁、高效. 编译的基本流程1.1词法分析词法分析(Lexical Analysis)会去检查是否输入的源代码是若干合法单词的组合.词法分析器统称Scanner，运行时需要关键字的词典，以及用正则表达式描述的词法规则. 词法分析会为每个合法的单词生成Token. 1.2语法">
+<meta property="og:description" content="程序源码直接拿来给静态分析器做静态分析是不合适的，像编译一样也需要在程序的中间表示(IR)上进行分析，这样能让静态分析算法比较简洁、高效. 编译的基本流程1.1词法分析词法分析(Lexical Analysis)会去检查是否输入的源代码是若干合法单词的组合.词法分析器统称Scanner，运行时需要关键字的词典，以及用正则表达式描述的词法规则. 词法分析会为每个合法的单词生成Token.">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E7%A8%8B%E5%BA%8F%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B.png?raw=true">
 <meta property="og:image" content="https://github.com/tianyu-monica/imag/blob/main/img%E6%8E%A7%E5%88%B6%E6%B5%81%E6%B1%87%E5%90%88%E6%97%B6SSA%E9%87%87%E7%94%A8phi-function.png?raw=true">
 <meta property="article:published_time" content="2021-10-27T08:23:07.000Z">
-<meta property="article:modified_time" content="2021-10-27T08:34:36.304Z">
+<meta property="article:modified_time" content="2021-10-27T09:33:58.114Z">
 <meta property="article:author" content="Tkuang">
 <meta property="article:tag" content="course">
 <meta name="twitter:card" content="summary">
@@ -80,7 +80,11 @@
   </style>
 </noscript>
 
-</head>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
   <div class="container use-motion">
@@ -183,7 +187,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2021-10-27 16:23:07 / Modified: 16:34:36" itemprop="dateCreated datePublished" datetime="2021-10-27T16:23:07+08:00">2021-10-27</time>
+              <time title="Created: 2021-10-27 16:23:07 / Modified: 17:33:58" itemprop="dateCreated datePublished" datetime="2021-10-27T16:23:07+08:00">2021-10-27</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -215,15 +219,15 @@
       
         <p>程序源码直接拿来给静态分析器做静态分析是不合适的，像编译一样也需要<strong>在程序的中间表示(IR)上进行分析</strong>，这样能让静态分析算法比较简洁、高效.</p>
 <h5 id="编译的基本流程"><a href="#编译的基本流程" class="headerlink" title="编译的基本流程"></a>编译的基本流程</h5><h6 id="1-1词法分析"><a href="#1-1词法分析" class="headerlink" title="1.1词法分析"></a>1.1词法分析</h6><p>词法分析(Lexical Analysis)会去检查是否输入的源代码是若干合法单词的组合.词法分析器统称<strong>Scanner</strong>，运行时需要关键字的词典，以及用<strong>正则表达式</strong>描述的词法规则.</p>
-<p>词法分析会为每个合法的单词生成<strong>Token</strong>.</p>
+<p>词法分析会为每个合法的单词生成<strong>Token</strong>.<span id="more"></span></p>
 <h6 id="1-2语法分析"><a href="#1-2语法分析" class="headerlink" title="1.2语法分析"></a>1.2语法分析</h6><p>语法分析(Syntax Analysis)会去检查这些Token的组合形式是否符合语法规则.语法分析器统称Parser，相应的描述语法规则的方式是<strong>上下文无关文法(Context-Free Grammer)</strong>.Context-Free Grammer的表达能力比Context-Sensitive Grammer弱，但是对几乎所有的编程语言而言，这样的表达能力就足够了，如果去使用后者反倒会更慢.</p>
 <p>语法分析会生成<strong>抽象语法树(AST)</strong>.</p>
-<h6 id="1-3语义分析"><a href="#1-3语义分析" class="headerlink" title="1.3语义分析"></a>1.3语义分析</h6><p>语义分析(Semantic Analysis)会去检查语义是否合理.和自然语言的语义不同，对编译器而言，只具备检查简单的语义的功能，如<strong>类型检查器(Type Checker)<strong>，相应的进行类型检查时描述规则的方法是</strong>Attribute Grammer</strong>.</p>
+<h6 id="1-3语义分析"><a href="#1-3语义分析" class="headerlink" title="1.3语义分析"></a>1.3语义分析</h6><p>语义分析(Semantic Analysis)会去检查语义是否合理.和自然语言的语义不同，对编译器而言，只具备检查简单的语义的功能，如<strong>类型检查器(Type Checker)</strong>，相应的进行类型检查时描述规则的方法是<strong>Attribute Grammer</strong>.</p>
 <p>语义分析会生成<strong>Decorated AST</strong>.</p>
-<h6 id="1-4转换"><a href="#1-4转换" class="headerlink" title="1.4转换"></a>1.4转换</h6><p>如果编译器有编译优化的功能，那么就要通过<strong>转换器(Translator) <strong>转换成</strong>中间表示(IR)</strong> 的形式，这里的中间表示IR通常指的都是<strong>三地址码形式(3-Address Form)</strong>.</p>
+<h6 id="1-4转换"><a href="#1-4转换" class="headerlink" title="1.4转换"></a>1.4转换</h6><p>如果编译器有编译优化的功能，那么就要通过<strong>转换器(Translator) </strong>转换成<strong>中间表示(IR)</strong> 的形式，这里的中间表示IR通常指的都是<strong>三地址码形式(3-Address Form)</strong>.</p>
 <p>生成IR之前的部分是<strong>编译器前端</strong>，生成IR之后的部分是<strong>编译器后端</strong>.编译优化就是静态分析的一种应用，静态分析是在IR的基础上做的，所以是属于编译器后端.这也说明了，要做静态分析，就不得不走完编译器前端的部分才能拿到IR，接着再在IR的基础上做分析.</p>
 <h6 id="1-5生成"><a href="#1-5生成" class="headerlink" title="1.5生成"></a>1.5生成</h6><p>为了能执行，要将上一步的中间表示，通过<strong>代码生成器(Code Generator)</strong> 生成<strong>机器码(Machine Code)</strong>.</p>
-<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E7%A8%8B%E5%BA%8F%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B.png?raw=true"></p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E7%A8%8B%E5%BA%8F%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B.png?raw=true" alt=""></p>
 <h5 id="AST与三地址码的比较"><a href="#AST与三地址码的比较" class="headerlink" title="AST与三地址码的比较"></a>AST与三地址码的比较</h5><h6 id="AST"><a href="#AST" class="headerlink" title="AST"></a>AST</h6><p>较高层，贴合编程语言的语法结构</p>
 <p>通常依赖于具体的编程语言</p>
 <p>适合快速进行类型检查</p>
@@ -237,7 +241,7 @@
 <p>如: <code>x = y op z</code> <code>if x goto L</code></p>
 <h5 id="静态单赋值-SSA"><a href="#静态单赋值-SSA" class="headerlink" title="静态单赋值(SSA)"></a>静态单赋值(SSA)</h5><p>一种经典的IR格式，与普通的三地址码的区别在于: 每一个定义都使用了新的名称</p>
 <h6 id="phi-function"><a href="#phi-function" class="headerlink" title="phi-function"></a>phi-function</h6><p>若出现控制流回合等情况，可使用 $\phi$​ 函数进行聚合</p>
-<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%8E%A7%E5%88%B6%E6%B5%81%E6%B1%87%E5%90%88%E6%97%B6SSA%E9%87%87%E7%94%A8phi-function.png?raw=true"></p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/img%E6%8E%A7%E5%88%B6%E6%B5%81%E6%B1%87%E5%90%88%E6%97%B6SSA%E9%87%87%E7%94%A8phi-function.png?raw=true" alt=""></p>
 <p>根据程序流程选择对应值</p>
 <h6 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h6><ul>
 <li>将flow-sensitive的指令变为flow-insensitive，即: 对指令的顺序不再敏感，可以提高分析速度.同时，因为本身带有的flow信息，可以较好保持flow-sensitive的精度.</li>
@@ -245,7 +249,7 @@
 <li>引入太多变量和phi-function</li>
 <li>转换到机器码时，有很多低效代码</li>
 </ul>
-<h5 id="控制流分析"><a href="#控制流分析" class="headerlink" title="控制流分析"></a>控制流分析</h5><p>通常指: 构建控制流图**(Control Flow Graph)**</p>
+<h5 id="控制流分析"><a href="#控制流分析" class="headerlink" title="控制流分析"></a>控制流分析</h5><p>通常指: 构建控制流图<strong>(Control Flow Graph)</strong></p>
 <p>CFG作为静态分析的基础结构，其中的结点(node)可以是独立的三地址码，也可以是一个<strong>基本块(Basic Block)</strong>.</p>
 <h5 id="基本块"><a href="#基本块" class="headerlink" title="基本块"></a>基本块</h5><p>Basic Block 是连续三地址码的最大序列，并满足以下条件: </p>
 <ul>
@@ -268,7 +272,6 @@
 <h5 id="Highlight"><a href="#Highlight" class="headerlink" title="Highlight"></a>Highlight</h5><h6 id="The-relation-between-compilers-and-static-analyzer"><a href="#The-relation-between-compilers-and-static-analyzer" class="headerlink" title="The relation between compilers and static analyzer"></a>The relation between compilers and static analyzer</h6><p>编译的过程要经过中间表示，静态分析器也需要在中间表示上进行</p>
 <h6 id="Understand-3AC-and-its-common-forms"><a href="#Understand-3AC-and-its-common-forms" class="headerlink" title="Understand 3AC and its common forms"></a>Understand 3AC and its common forms</h6><p>指令的右侧最多只有一个操作符，每个指令最多含有三个地址（变量、常量、编译器生成的临时变量）</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">x = y bop z</span><br><span class="line">x = uop y</span><br><span class="line">x = y</span><br><span class="line">goto L</span><br><span class="line">if x goto L</span><br><span class="line">if x rop y goto L</span><br></pre></td></tr></table></figure>
-
 <h6 id="How-to-build-basic-blocks-on-top-of-IR"><a href="#How-to-build-basic-blocks-on-top-of-IR" class="headerlink" title="How to build basic blocks on top of IR"></a>How to build basic blocks on top of IR</h6><p>找到leaders (第一条；跳转目标指令；跳转指令下一条)</p>
 <p>从一个leader开始，到下一个leader开始前结束</p>
 <h6 id="How-to-construct-control-flow-graphs-on-top-of-BBs"><a href="#How-to-construct-control-flow-graphs-on-top-of-BBs" class="headerlink" title="How to construct control flow graphs on top of BBs"></a>How to construct control flow graphs on top of BBs</h6><p>连接各基本块: </p>
@@ -485,6 +488,8 @@
 
 
 
+
+  
 
   
 
