@@ -150,6 +150,111 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/10/27/L1-Introduction/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Tkuang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="tianyu-monica's space">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/10/27/L1-Introduction/" class="post-title-link" itemprop="url">L1 Introduction</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-10-27 13:55:55 / Modified: 14:09:20" itemprop="dateCreated datePublished" datetime="2021-10-27T13:55:55+08:00">2021-10-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Static-Analysis/" itemprop="url" rel="index"><span itemprop="name">Static Analysis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>背景：过去十年中，语言的内核几乎没有大的改变，但程序越趋复杂</p>
+<p>挑战：面对大规模的复杂程序，如何确保其可靠安全？</p>
+<p>静态分析的作用：</p>
+<ul>
+<li>程序可靠性<ul>
+<li>空指针</li>
+<li>内存泄漏</li>
+</ul>
+</li>
+<li>程序安全性<ul>
+<li>私人信息泄露</li>
+<li>注入攻击</li>
+</ul>
+</li>
+<li>编译优化<ul>
+<li>死代码删除</li>
+</ul>
+</li>
+<li>程序理解<ul>
+<li>IDE</li>
+</ul>
+</li>
+</ul>
+<p>定义：<strong>Static analysis</strong> analyzes a program P to reason about its behaviors and determines whether it satisfies some properties before running P.</p>
+<p>然而，莱斯定理指出我们并无法获得一个准确完美的答案。</p>
+<blockquote>
+<p>Rice‘s Theorem:</p>
+<p>Any non-trivial property of the behavior of program in a r.e. language is undecidable.</p>
+</blockquote>
+<p>于是，退而求其次，寻求尽可能有用的方案：</p>
+<p>通过Overapproximate或者Underapproximate以获得Sound或Complete的结果。但会分别出现False Positives与False Negatives。</p>
+<p><img src="https://github.com/tianyu-monica/imag/blob/main/imgsound&complete.png?raw=true"></p>
+<p>静态分析就是在确保soundness的基础上，在分析精度和速度上做一个平衡。</p>
+<p>两个词简要概括静态分析（针对大多数的静态分析，即may analysis）</p>
+<ul>
+<li>Abstraction</li>
+<li>Over-approximation</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/10/26/%E8%B7%A8%E8%B6%8A%E6%97%B6%E7%A9%BA%E7%9A%84%E5%AF%B9%E8%AF%9D/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -455,18 +560,18 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-count">4</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">tags</span>
       </div>
   </nav>
